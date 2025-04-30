@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+.env/
+
+# OS files
+.DS_Store
+
+# Model files
+model.joblib
+
+# Logs and temp
+*.log
+*.tmp
+*.swp
