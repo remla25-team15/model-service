@@ -1,21 +1,31 @@
 # Use slim Python base image
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 # Set working directory
-WORKDIR /app
+WORKDIR /app/
 
-# Install Git
-RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    gcc \
+    build-essential \
+    libopenblas-dev \
+    libffi-dev \
+    libssl-dev \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
-# Copy model
-COPY model.joblib .
+COPY src/ src/
 
-# Copy app code
-COPY src/ ./src/
+RUN mkdir -p /output
 
+EXPOSE 8080
+
+
+ENTRYPOINT ["python"]
 # Run the app
-CMD ["python", "src/app.py"]
+CMD ["src/app.py"]
