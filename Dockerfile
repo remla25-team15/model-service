@@ -1,5 +1,5 @@
 # Use slim Python base image
-FROM python:3.12-slim
+FROM python:3.10-slim
 
 # Set working directory
 WORKDIR /app/
@@ -22,9 +22,6 @@ RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 COPY src/ src/
 
 RUN mkdir -p /output
-
-EXPOSE 8080
-
 
 ENTRYPOINT ["python"]
 # Run the app
