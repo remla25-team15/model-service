@@ -71,9 +71,9 @@ def predict():
         schema:
           type: object
           required:
-            - review
+            - text
           properties:
-            review:
+            text:
               type: string
               example: "This product was amazing, I loved it!"
     responses:
@@ -82,7 +82,7 @@ def predict():
         schema:
           type: object
           properties:
-            sentiment:
+            prediction:
               type: integer
               example: 1
     """
@@ -110,7 +110,6 @@ def version():
               type: string
     """
     return jsonify({"version": "v1.0"})
-
 
 
 if __name__ == "__main__":
