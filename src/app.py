@@ -45,7 +45,6 @@ cv_url = os.getenv(
     "CV_URI",
     "https://drive.google.com/file/d/14bCZu2mMU_90ngZLDXyQh9fQCbqDW0E-/view?usp=sharing",
 )
-
 model_url = os.getenv(
     "MODEL_RESOURCE_URI",
     "https://drive.google.com/file/d/1F6i--L50pVm7p0dcApGIhepC7CovC3La/view?usp=sharing",
@@ -94,6 +93,24 @@ def predict():
     review_vector, _ = libml._preprocess(review_df, cv)
     prediction = model.predict(review_vector)[0]
     return jsonify({"prediction": round(prediction)})
+
+
+@app.route("/version", methods=["GET"])
+def version():
+    """
+    Return the version of the model
+    ---
+    responses:
+      200:
+        description: The version of the model.
+        schema:
+          type: object
+          properties:
+            version:
+              type: string
+    """
+    return jsonify({"version": "v1.0"})
+
 
 
 if __name__ == "__main__":
