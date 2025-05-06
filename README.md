@@ -72,7 +72,7 @@ At runtime, the service downloads and loads two files from Google Drive:
 ---
 
 ## Testing
-
+cd
 To test the service manually with `curl`:
 
 ```bash
