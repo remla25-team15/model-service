@@ -3,14 +3,19 @@ import os
 import gdown
 import joblib
 import pandas as pd
+from dotenv import load_dotenv
 from flasgger import Swagger
 from flask import Flask, jsonify, request
 from libml import preprocessing as libml
 from pandas import DataFrame
 from sklearn.feature_extraction.text import CountVectorizer
 
+load_dotenv()
+
 app = Flask(__name__)
 swagger = Swagger(app)
+
+MODEL_DIR = "/models"
 
 
 def download_and_load_model(google_drive_url, download_path, model_filename):
@@ -22,30 +27,34 @@ def download_and_load_model(google_drive_url, download_path, model_filename):
     :param model_filename: Name of the file to save the model as (e.g. 'model.pkl')
     :return: Loaded model object
     """
-    # Download the model file directly from Google Drive
-    downloaded_file = gdown.download(
-        google_drive_url, f"{download_path}/{model_filename}", quiet=False, fuzzy=True
-    )
-    print(f"Downloaded file: {downloaded_file}")
+    os.makedirs(download_path, exist_ok=True)
+    model_filepath = os.path.join(download_path, model_filename)
 
-    # Load the model using joblib
-    model = joblib.load(f"{download_path}/{model_filename}")
+    if not os.path.exists(model_filepath):
+        print(f"File not found locally. Downloading: {model_filename}")
+        gdown.download(google_drive_url, model_filepath, quiet=False, fuzzy=True)
+    else:
+        print(f"File already exists: {model_filepath}, skipping download.")
 
+    model = joblib.load(model_filepath)
     return model
 
 
 # URLs for both models
-cv_url = (
-    "https://drive.google.com/file/d/14bCZu2mMU_90ngZLDXyQh9fQCbqDW0E-/view?usp=sharing"
+cv_url = os.getenv(
+    "CV_URI",
+    "https://drive.google.com/file/d/14bCZu2mMU_90ngZLDXyQh9fQCbqDW0E-/view?usp=sharing",
 )
-model_url = (
-    "https://drive.google.com/file/d/1F6i--L50pVm7p0dcApGIhepC7CovC3La/view?usp=sharing"
+
+model_url = os.getenv(
+    "MODEL_RESOURCE_URI",
+    "https://drive.google.com/file/d/1F6i--L50pVm7p0dcApGIhepC7CovC3La/view?usp=sharing",
 )
 
 # Download and load the models
-cv = download_and_load_model(cv_url, download_path="../output", model_filename="cv.pkl")
+cv = download_and_load_model(cv_url, download_path=MODEL_DIR, model_filename="cv.pkl")
 model = download_and_load_model(
-    model_url, download_path="../output", model_filename="model.pkl"
+    model_url, download_path=MODEL_DIR, model_filename="model.pkl"
 )
 
 
@@ -89,5 +98,5 @@ def predict():
 
 if __name__ == "__main__":
     debug = os.getenv("DEBUG", True)
-    app.run(host="0.0.0.0", port=5001, debug=debug)
-
+    port = os.getenv("PORT", 5001)
+    app.run(host="0.0.0.0", port=port, debug=debug)
