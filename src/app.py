@@ -17,6 +17,8 @@ swagger = Swagger(app)
 
 MODEL_DIR = "/models"
 
+MODEL_VERSION = os.getenv("MODEL_VERSION", "v1.0.0")
+
 
 def download_and_load_model(google_drive_url, download_path, model_filename):
     """
@@ -109,7 +111,7 @@ def version():
             version:
               type: string
     """
-    return jsonify({"version": "v1.0"})
+    return jsonify({"version": f"{MODEL_VERSION}"})
 
 
 if __name__ == "__main__":
