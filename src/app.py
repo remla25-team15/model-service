@@ -54,7 +54,7 @@ def download_and_load_model(resource_url, download_path, model_filename):
 
     if not os.path.exists(model_filepath):
         print(
-            f"File not found locally. Downloading: {model_filename} from {resource_url}"
+            f"File {model_filepath} not found locally. Downloading: {model_filename} from {resource_url}"
         )
         urllib.request.urlretrieve(resource_url, model_filepath)
     else:
@@ -74,9 +74,15 @@ model_url = urllib.parse.urljoin(
 )
 
 # Download and load the models
-cv = download_and_load_model(cv_url, download_path=MODEL_DIR, model_filename="cv.pkl")
+cv = download_and_load_model(
+    cv_url,
+    download_path=os.path.join(MODEL_DIR, MODEL_VERSION),
+    model_filename="cv.pkl",
+)
 model = download_and_load_model(
-    model_url, download_path=MODEL_DIR, model_filename="model.pkl"
+    model_url,
+    download_path=os.path.join(MODEL_DIR, MODEL_VERSION),
+    model_filename="model.pkl",
 )
 
 
