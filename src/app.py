@@ -1,6 +1,7 @@
 import os
+import urllib.parse
+import urllib.request
 
-import gdown
 import joblib
 import pandas as pd
 from dotenv import load_dotenv
@@ -9,20 +10,41 @@ from flask import Flask, jsonify, request
 from libml import preprocessing as libml
 from pandas import DataFrame
 from sklearn.feature_extraction.text import CountVectorizer
+from werkzeug.middleware.dispatcher import DispatcherMiddleware
+from werkzeug.serving import run_simple
 
 load_dotenv()
 
-app = Flask(__name__)
-swagger = Swagger(app)
-
 MODEL_DIR = "/models"
 
+MODEL_VERSION = os.getenv("MODEL_VERSION", "v1.1.0")
 
-def download_and_load_model(google_drive_url, download_path, model_filename):
+RESOURCE_BASE_URL = os.getenv(
+    "RESOURCE_BASE_URL",
+    "https://github.com/remla25-team15/model-training/releases/download/",
+)
+
+app = Flask(__name__)
+swagger_template = {
+    "swagger": "2.0",
+    "info": {
+        "title": "Sentiment Analysis API",
+        "description": "API for predicting sentiment of text reviews",
+        "version": MODEL_VERSION,
+    },
+    "basePath": "/model",
+    "schemes": ["http"],
+    "consumes": ["application/json"],
+    "produces": ["application/json"],
+}
+swagger = Swagger(app, template=swagger_template)
+
+
+def download_and_load_model(resource_url, download_path, model_filename):
     """
-    Download a model from Google Drive and load it using joblib.
+    Download a model from the given URL and load it using joblib.
 
-    :param google_drive_url: URL of the Google Drive file to download
+    :param resource_url: URL of the file to download
     :param download_path: Path to save the downloaded model file
     :param model_filename: Name of the file to save the model as (e.g. 'model.pkl')
     :return: Loaded model object
@@ -31,29 +53,36 @@ def download_and_load_model(google_drive_url, download_path, model_filename):
     model_filepath = os.path.join(download_path, model_filename)
 
     if not os.path.exists(model_filepath):
-        print(f"File not found locally. Downloading: {model_filename}")
-        gdown.download(google_drive_url, model_filepath, quiet=False, fuzzy=True)
+        print(
+            f"File {model_filepath} not found locally. Downloading: {model_filename} from {resource_url}"
+        )
+        urllib.request.urlretrieve(resource_url, model_filepath)
     else:
         print(f"File already exists: {model_filepath}, skipping download.")
 
-    model = joblib.load(model_filepath)
-    return model
+    return joblib.load(model_filepath)
 
 
-# URLs for both models
-cv_url = os.getenv(
-    "CV_URI",
-    "https://drive.google.com/file/d/14bCZu2mMU_90ngZLDXyQh9fQCbqDW0E-/view?usp=sharing",
-)
-model_url = os.getenv(
-    "MODEL_RESOURCE_URI",
-    "https://drive.google.com/file/d/1F6i--L50pVm7p0dcApGIhepC7CovC3La/view?usp=sharing",
+CV_FILE_NAME = os.getenv("CV_FILE_NAME", "c1_BoW_Sentiment_Model.pkl")
+MODEL_FILE_NAME = os.getenv("MODEL_FILE_NAME", "c2_Classifier_Sentiment_Model.pkl")
+
+# Build URLs for both models
+cv_url = urllib.parse.urljoin(RESOURCE_BASE_URL, f"{MODEL_VERSION}/{CV_FILE_NAME}")
+
+model_url = urllib.parse.urljoin(
+    RESOURCE_BASE_URL, f"{MODEL_VERSION}/{MODEL_FILE_NAME}"
 )
 
 # Download and load the models
-cv = download_and_load_model(cv_url, download_path=MODEL_DIR, model_filename="cv.pkl")
+cv = download_and_load_model(
+    cv_url,
+    download_path=os.path.join(MODEL_DIR, MODEL_VERSION),
+    model_filename="cv.pkl",
+)
 model = download_and_load_model(
-    model_url, download_path=MODEL_DIR, model_filename="model.pkl"
+    model_url,
+    download_path=os.path.join(MODEL_DIR, MODEL_VERSION),
+    model_filename="model.pkl",
 )
 
 
@@ -109,10 +138,13 @@ def version():
             version:
               type: string
     """
-    return jsonify({"version": "v1.0"})
+    return jsonify({"version": f"{MODEL_VERSION}"})
 
 
 if __name__ == "__main__":
     debug = os.getenv("DEBUG", True)
-    port = os.getenv("PORT", 5001)
-    app.run(host="0.0.0.0", port=port, debug=debug)
+    port = int(os.getenv("PORT", 5001))
+
+    application = DispatcherMiddleware(Flask("dummy"), {"/model": app})
+    run_simple("0.0.0.0", port, application, use_reloader=True, use_debugger=True)
+    # app.run(host="0.0.0.0", port=port, debug=debug)
