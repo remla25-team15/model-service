@@ -1,0 +1,21 @@
+[project]
+name = "model-service"
+version = "2.0.1-alpha"
+description = "Model service that exposes the ML model API for the application"
+authors = [
+    {name = "shreyas",email = "shreyaskalvankar@gmail.com"}
+]
+readme = "README.md"
+
+[tool.bumpver]
+current_version = "2.0.1-alpha"
+version_pattern = "MAJOR.MINOR.PATCH[-TAG]"
+commit = true
+tag = false
+version_files = ["pyproject.toml:project.version"]
+
+[tool.bumpver.file_patterns]
+"pyproject.toml" = [
+    '^version = "{version}"',
+    '^current_version = "{version}"'
+]
