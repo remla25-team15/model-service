@@ -1,12 +1,7 @@
 # model-service
 
-### 1. Launch a Bash session in the container
-
-docker build -t app
-
-### 2. Run the model on port 8080
-
-docker run -it --rm -p 8080:5001 app
+We recommend running the entire application to in development mode instead of trying to run this service by itself. 
+Instructions can be found here: https://github.com/remla25-team15/operation?tab=readme-ov-file#development-section
 
 ## Instructions for creating a new release
 
