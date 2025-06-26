@@ -1,6 +1,6 @@
 [project]
 name = "model-service"
-version = "2.0.1-alpha"
+version = "2.0.2-alpha"
 description = "Model service that exposes the ML model API for the application"
 authors = [
     {name = "shreyas",email = "shreyaskalvankar@gmail.com"}
@@ -8,7 +8,7 @@ authors = [
 readme = "README.md"
 
 [tool.bumpver]
-current_version = "2.0.1-alpha"
+current_version = "2.0.2-alpha"
 version_pattern = "MAJOR.MINOR.PATCH[-TAG]"
 commit = true
 tag = false
