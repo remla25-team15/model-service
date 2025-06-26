@@ -1,10 +1,9 @@
-# Use slim Python base image
-FROM python:3.10-slim
+# Stage 1: Builder
+FROM python:3.10-slim AS builder
 
-# Set working directory
 WORKDIR /app/
 
-# Install system dependencies
+# Install build dependencies (only for this stage)
 RUN apt-get update && apt-get install -y \
     git \
     gcc \
@@ -15,14 +14,26 @@ RUN apt-get update && apt-get install -y \
     python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install
+# Install Python dependencies into a temp directory
 COPY requirements.txt .
-RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip && pip install --no-cache-dir --prefix=/install -r requirements.txt
 
+# Copy app code
 COPY src/ src/
 
+# Stage 2: Final lightweight image
+FROM python:3.10-slim
+
+WORKDIR /app/
+
+# Copy installed packages from builder
+COPY --from=builder /install /usr/local
+
+# Copy app code
+COPY --from=builder /app/src/ src/
+
+# Create output folder
 RUN mkdir -p /output
 
 ENTRYPOINT ["python"]
-# Run the app
 CMD ["src/app.py"]
